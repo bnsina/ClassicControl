@@ -12,6 +12,19 @@ class LinearSemiGradientSARSAOrtho(LinearFunctionApproximationAlgorithm):
         self.history['header'] += ('iter', 'alpha', '|w - w_old|', '|w^T w - I|')
         self.history['format'] += '{:<15d}{:<15.2e}{:<15.2e}{:<15.2e}'
         self.submethod = kwargs['submethod']
+        self.cvlen = kwargs['cvlen']
+    
+    # get curvilinear step size if needed    
+    def get_cvlen(self, alpha): 
+        if self.cvlen == 'alpha':
+            return alpha
+
+        elif type(self.cvlen) is int:
+            return self.cvlen
+        
+        else: 
+            print(f'{self.cvlen} not recognized')
+            return None
     
     # submethod switch
     def new_weights(self, model, theta, alpha, D, D_grad):
@@ -29,21 +42,23 @@ class LinearSemiGradientSARSAOrtho(LinearFunctionApproximationAlgorithm):
             insert_data(model, torch.reshape(w_ortho, (-1,)))
             
         elif self.submethod == 'CurvilinearInverse':
+            t = self.get_cvlen(alpha)
+            dtheta = D * D_grad
             w_rs = torch.reshape(theta, (ns, na))
-            dq_rs = torch.reshape(D_grad, (ns, na))
+            dq_rs = torch.reshape(dtheta, (ns, na))
             U = torch.cat((dq_rs, w_rs), dim=1)
             Vt = torch.cat((w_rs, -dq_rs), dim=1).t()
-            t = 1 
             inv = torch.inverse(torch.eye(2*na, 2*na) + (t/2) * torch.matmul(Vt, U))
             w_ortho = w_rs - t * torch.linalg.multi_dot((U, inv, Vt, w_rs))
             insert_data(model, torch.reshape(w_ortho, (-1,)))
         
         elif self.submethod == 'CurvilinearNoInverse':
+            t = self.get_cvlen(alpha)
+            dtheta = D * D_grad
             w_rs = torch.reshape(theta, (ns, na))
-            dq_rs = torch.reshape(D_grad, (ns, na))
+            dq_rs = torch.reshape(dtheta, (ns, na))
             Afrag =  torch.matmul(dq_rs, w_rs.t())
             A = Afrag - Afrag.t()
-            t = alpha
             LHS = torch.eye(ns) + (t/2) * A
             RHS = torch.matmul(torch.eye(ns) - (t/2) * A, w_rs)
             w_ortho = torch.linalg.solve(LHS, RHS)

@@ -25,7 +25,8 @@ if __name__ == '__main__':
         'Jobs are performed sequentially by default, with an option for \n' + 
         'multiprocessing for long or numerous experiments.\n\n' + 
         'If -v (verbose) is not set, output of each job is stored in a file named\n' + 
-        '[DATE]_[TIME]_[problem]_[job_name]_[algorithm]_[submethod].txt\n' +
+        '[DATE]_[TIME]_[problem]_[job_name]_[algorithm]_[submethod].[ext]\n' +
+        'where [ext] is CSV (default) of TXT (enabled by -t flag)' +
         'If -v is set, output is printed in the console (not compatible with multiprocessing).\n\n' +
         '-------Implemented-------\n' +
         'Problems:\n' + 
@@ -36,19 +37,18 @@ if __name__ == '__main__':
         '       -> Original, Procrustes, CurvilinearInverse, CurvilinearNoInverse, QR\n' +
         'Featurizers:\n' + 
         '   Linear\n\n' +
-        '--Not yet implemented:---\n' +
-        '   Curvilinear step size input\n' +
-        '   Robust error handling'             
+        '--Not yet implemented:---\n'          
     )
     parser.add_argument('filename', nargs='?', help='filename/path of parameter CSV')
     parser.add_argument('-m', '--multi', dest='multi', action='store_true', help='enable multiprocessing')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='print output to console, forces single-processing!')
+    parser.add_argument('-t', '--txt', dest='retxt', action='store_true', help='send output to TXT instead of CSV')
     args = parser.parse_args()
     
     input_df = pd.read_csv(args.filename, sep=',')
     num_jobs, _ = input_df.shape
     
-    vflag = pd.Series([args.verbose], index=['verbose'])
+    vflag = pd.Series([args.verbose, args.retxt], index=['verbose', 'retxt'])
     # -v overrides -m and forces single-processing
     if args.verbose == True:
         args.multi = False

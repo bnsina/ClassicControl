@@ -1,7 +1,9 @@
 from . import linear_ortho_sgsarsa as los
 from contextlib import redirect_stdout
 from datetime import datetime
+from os import path, getcwd
 import torch
+import pandas as pd
 from gym.envs.classic_control import MountainCarEnv
 from gym.envs.classic_control import CartPoleEnv
 import gnflow3.featurizers
@@ -39,7 +41,7 @@ class controller:
 
     def run(self):
         
-        filename = self.now_str + '_' + self.args.problem + '_' + self.args.job_name + '_' + self.args.algorithm + '_' + self.args.submethod + '.txt'
+        filename = self.now_str + '_' + self.args.problem + '_' + self.args.job_name + '_' + self.args.algorithm + '_' + self.args.submethod 
         torch.set_default_dtype(torch.float64)
         
         if self.args.problem == 'MountainCar': 
@@ -58,10 +60,18 @@ class controller:
             
             # write to file if not verbose
             if self.args.verbose == False:
-                with open(filename,'w') as f:
-                    with redirect_stdout(f):
-                        print(self.args)
-                        Q, S, _ = opt.train(mountain_car, model, verbose=True, log_interval=1)
+                
+                if self.args.retxt == True:
+                    with open(filename + '.txt','w') as f:
+                        with redirect_stdout(f):
+                            print(self.args)
+                            Q, S, _ = opt.train(mountain_car, model, verbose=True, log_interval=1)            
+                else:
+                    Q, S, _ = opt.train(mountain_car, model, verbose=False, log_interval=1)
+                    
+                    mc_res = pd.DataFrame(opt.history['value'], columns=opt.history['header'])
+                    pd.DataFrame.to_csv(mc_res, path.join(getcwd(), filename + '.csv'))
+            
             if self.args.verbose == True:
                 Q, S, _ = opt.train(mountain_car, model, verbose=True, log_interval=1)
             
@@ -81,10 +91,18 @@ class controller:
             
             # write to file if not verbose
             if self.args.verbose == False:
-                with open(filename,'w') as f:
-                    with redirect_stdout(f):
-                        print(self.args)
-                        Q, S, _ = opt.train(cart_pole, model, verbose=True, log_interval=1)
+                
+                if self.args.retxt == True:
+                    with open(filename + '.txt','w') as f:
+                        with redirect_stdout(f):
+                            print(self.args)
+                            Q, S, _ = opt.train(cart_pole, model, verbose=True, log_interval=1)            
+                else:
+                    Q, S, _ = opt.train(cart_pole, model, verbose=False, log_interval=1)
+                    
+                    mc_res = pd.DataFrame(opt.history['value'], columns=opt.history['header'])
+                    pd.DataFrame.to_csv(mc_res, path.join(getcwd(), filename + '.csv'))
+                            
             if self.args.verbose == True:
                 Q, S, _ = opt.train(cart_pole, model, verbose=True, log_interval=1)
             

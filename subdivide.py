@@ -1,40 +1,42 @@
 import argparse
 import math
 
-def left_bunch(lbd, ubd, ns):
-    scale = (ubd-lbd) / math.log(1.0 + ns)
-    left = ubd
+def buncher(lbd, ubd, ns, flag):
+    res = []
+    scale = (ubd-lbd) / math.log(math.log(1.0 + ns))
+
+    left = (not flag)*ubd + flag*lbd
 
     for i in range(ns):
-        right = ubd - math.log(2.0 + i) * scale
-        print(f'{left} \n')
+    
+        right = (not flag)*ubd + flag*lbd + ((-1)**(not flag)) * math.log(math.log(3.0 + i)) * scale
+        res.append(left)
         left = right
+    
+    return sorted(res)
 
-def right_bunch(lbd, ubd, ns):
-    scale = (ubd-lbd) / math.log(1.0 + ns)
-    left = lbd
-
-    for i in range(ns):
-        right = lbd + math.log(2.0 + i) * scale
-        print(f'{left} \n')
-        left = right
-
-
-
+def displayer(lst, flag):
+    
+    if flag == True:
+        print(lst)
+    else:
+        for i in reversed(range(len(lst))):
+            print(f'{lst[i]} \n')
+        
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(
-        prog='Logarithmic subdivision of interval',
-        description='DEFAULT = exponential'
+        prog='Subdivision of interval',
+        description='DEFAULT = loglog'
     )
     parser.add_argument('lower_bd', nargs=1, type=float)
     parser.add_argument('upper_bd', nargs=1, type=float)
     parser.add_argument('num_subs', nargs=1, type=int)
-    parser.add_argument('-r', '--right', dest='r', action='store_true', help='right bunched')
+    parser.add_argument('-r', '--right', dest='right', action='store_true', help='right bunched')
+    parser.add_argument('-l', '--list', dest='list', action='store_true', help='print as list')
     args = parser.parse_args()
     
-    if args.r == False:
-        left_bunch(args.lower_bd[0], args.upper_bd[0], args.num_subs[0])
-    else:
-        right_bunch(args.lower_bd[0], args.upper_bd[0], args.num_subs[0])
+    out = buncher(args.lower_bd[0], args.upper_bd[0], args.num_subs[0], args.right)
+    
+    displayer(out, args.list)
     

@@ -6,11 +6,11 @@ from time import perf_counter
 import multiprocessing as mp
 
 # convert param df into namespace list for pool.map(), also append verbose flag
-def param_lister(input_df, num_jobs):
+def param_lister(input_df, retxt, num_jobs):
     ns_list = []
     for i in range(num_jobs):
-        vflag = pd.Series([False], index=['verbose'])
-        pre_ns = pd.concat([input_df.iloc[i,:], vflag]).to_dict()
+        flags = pd.Series([False, retxt], index=['verbose', 'retxt'])
+        pre_ns = pd.concat([input_df.iloc[i,:], flags]).to_dict()
         ns_list.append(argparse.Namespace(**pre_ns))
     return ns_list
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         
         t_initial = perf_counter()
         
-        param_list = param_lister(input_df, num_jobs)
+        param_list = param_lister(input_df, args.retxt, num_jobs)
         
         with mp.Pool(processes=proc_size) as pool:
             pool.map(multi.runner, param_list)

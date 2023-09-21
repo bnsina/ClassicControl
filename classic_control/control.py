@@ -4,8 +4,10 @@ from datetime import datetime
 from os import path, getcwd
 import torch
 import pandas as pd
+from numpy import array
 from gym.envs.classic_control import MountainCarEnv
 from gym.envs.classic_control import CartPoleEnv
+from gnflow3.envs import TrajectoryEnv
 import gnflow3.featurizers
 import gnflow3.models as models
 from gnflow3.utils import set_seed
@@ -105,6 +107,34 @@ class controller:
                             
             if self.args.verbose == True:
                 Q, S, _ = opt.train(cart_pole, model, verbose=True, log_interval=1)
+        
+        elif self.args.problem == 'Trajectory':  
+            traj = TrajectoryEnv(grid_size=array([16, 16]))
+            featurizer = self.choose_featurizer()
+
+            num_actions = traj.action_space.n
+            num_state = traj.observation_space.shape[0]
+            model = models.LinearModel(featurizer, num_state, num_actions)
+
+            set_seed(self.args.seed, traj)
+           
+            self.initialize_weights(model)
+           
+            opt = self.choose_algo(**vars(self.args))
+           
+            # write to file if not verbose
+            if self.args.verbose == False:
+               
+                if self.args.retxt == True:
+                    with open(filename + '.txt','w') as f:
+                        with redirect_stdout(f):
+                            print(self.args)
+                            Q, S, _ = opt.train(traj, model, verbose=True, log_interval=1)            
+                else:
+                    Q, S, _ = opt.train(traj, model, verbose=False, log_interval=1)
+                   
+                    mc_res = pd.DataFrame(opt.history['value'], columns=opt.history['header'])
+                    pd.DataFrame.to_csv(mc_res, path.join(getcwd(), filename + '.csv'))
             
         else:
             print('Problem ' + str(self.args.problem) + ' not detected. See: classic_control -h for implemented problems.')

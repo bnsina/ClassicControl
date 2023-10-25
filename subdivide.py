@@ -15,8 +15,7 @@ def buncher(lbd, ubd, ns, flag):
     
     return sorted(res)
 
-def displayer(lst, flag):
-    
+def displayer(lst, flag): 
     if flag == True:
         print(lst)
     else:

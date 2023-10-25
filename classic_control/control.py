@@ -5,9 +5,10 @@ from os import path, getcwd
 import torch
 import pandas as pd
 from numpy import array
+import matplotlib.pyplot as plt
 from gym.envs.classic_control import MountainCarEnv
 from gym.envs.classic_control import CartPoleEnv
-from gnflow3.envs import TrajectoryEnv
+from gnflow3.envs import TrajectoryEnv, TrajectoryEnvVisualizersFunctionApproximation
 import gnflow3.featurizers
 import gnflow3.models as models
 from gnflow3.utils import set_seed
@@ -75,6 +76,7 @@ class controller:
                     pd.DataFrame.to_csv(mc_res, path.join(getcwd(), filename + '.csv'))
             
             if self.args.verbose == True:
+                print(self.args.job_name)
                 Q, S, _ = opt.train(mountain_car, model, verbose=True, log_interval=1)
             
         elif self.args.problem == 'CartPole':  
@@ -106,6 +108,7 @@ class controller:
                     pd.DataFrame.to_csv(mc_res, path.join(getcwd(), filename + '.csv'))
                             
             if self.args.verbose == True:
+                print(self.args.job_name)
                 Q, S, _ = opt.train(cart_pole, model, verbose=True, log_interval=1)
         
         elif self.args.problem == 'Trajectory':  
@@ -135,6 +138,26 @@ class controller:
                    
                     mc_res = pd.DataFrame(opt.history['value'], columns=opt.history['header'])
                     pd.DataFrame.to_csv(mc_res, path.join(getcwd(), filename + '.csv'))
+            
+            if self.args.verbose == True:
+                print(self.args.job_name)
+                Q, S, _ = opt.train(traj, model, verbose=True, log_interval=1)
+                
+                # print(opt.best)
+                # print(model.w)
+                # print(f'Policy tester: {opt.policy(model, array([-0.8125 -0.9375]), 0)}')
+                
+                # viz test
+                # visualizer = TrajectoryEnvVisualizersFunctionApproximation(traj, opt)
+
+                # visualizer.plot_world(show_colorbar=True, show_start=True, show_end=True, show_legend=True, show_axis=True)
+                # plt.show()
+
+                # visualizer.plot_greedy_path(show_colorbar=True, show_start=True, show_end=True)
+                # plt.show()
+
+                # visualizer.plot_greedy_policy(show_colorbar=True, show_start=True, show_end=True)
+                # plt.show()
             
         else:
             print('Problem ' + str(self.args.problem) + ' not detected. See: classic_control -h for implemented problems.')

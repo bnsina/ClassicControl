@@ -16,6 +16,7 @@ class LinearSemiGradientSARSAOrtho(LinearFunctionApproximationAlgorithm):
         self.cvlen = kwargs['cvlen']
         self.ns = 0
         self.na = 0
+        self.model = None
     
     ## STEP CONTROL WORKFLOW
     # run_episode -> new_weights -> get_cvlen ----(yes) ---> {submethod}_traverse([params], stepsize) -> OUTPUT NEW WEIGHTS
